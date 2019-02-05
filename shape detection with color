@@ -1,0 +1,67 @@
+import cv2
+import numpy as np
+cap=cv2.VideoCapture('C:\Users\SARANSH TAYAL\Desktop\w1.mp4')
+#cap=cv2.VideoCapture(1)
+def nothing(x):
+    pass
+"""cv2.namedWindow('TRACKBAR')
+cv2.createTrackbar('lower H','TRACKBAR',0,255,nothing)
+cv2.createTrackbar('upper H','TRACKBAR',0,255,nothing)
+cv2.createTrackbar('lower S','TRACKBAR',0,255,nothing)
+cv2.createTrackbar('upper S','TRACKBAR',0,255,nothing)
+cv2.createTrackbar('lower V','TRACKBAR',0,255,nothing)
+cv2.createTrackbar('upper V','TRACKBAR',0,255,nothing)"""
+
+shape=input("enter shape:")
+colour=input("enter colour:")
+
+while 1:
+    ret,img=cap.read()
+    if not ret:
+        cap = cv2.VideoCapture('C:\Users\SARANSH TAYAL\Desktop\w1.mp4')
+        #cap=cv2.VideoCapture(1)
+        continue
+    """lh = cv2.getTrackbarPos('lower H', 'TRACKBAR')
+    ls = cv2.getTrackbarPos('lower S', 'TRACKBAR')
+    lv = cv2.getTrackbarPos('lower V', 'TRACKBAR')
+    uh = cv2.getTrackbarPos('upper H', 'TRACKBAR')
+    us = cv2.getTrackbarPos('upper S', 'TRACKBAR')
+    uv = cv2.getTrackbarPos('upper V', 'TRACKBAR')"""
+
+    if colour=="red":
+        lower=np.array([38,64,0])
+        upper=np.array([255,255,255])
+    if colour=="yellow":
+        lower=np.array([6,64,94])
+        upper=np.array([36,255,225])
+
+
+    #lower = np.array([lh, ls, lv])
+    #upper = np.array([uh, us, uv])
+
+    blur=cv2.medianBlur(img,5)
+    hsv=cv2.cvtColor(blur,cv2.COLOR_BGR2HSV)
+    mask=cv2.inRange(hsv,lower,upper)
+    smooth = cv2.medianBlur(mask, 5)
+
+    _,contours,_=cv2.findContours(smooth,cv2.RETR_TREE,cv2.CHAIN_APPROX_SIMPLE)
+    font=cv2.FONT_HERSHEY_COMPLEX
+    for cnt in contours:
+        approx=cv2.approxPolyDP(cnt,0.01*cv2.arcLength(cnt,True),True)
+        cv2.drawContours(img,[approx],0,[0,255,0],5)
+        x = approx.ravel()[0]
+        y = approx.ravel()[1]
+        if len(approx)==3 and shape=="triangle":
+            cv2.putText(img,"triangle",(x,y),font,1,(0))
+        elif len(approx)==4 and shape=="rectangle":
+            cv2.putText(img,"rectangle",(x,y),font,1,(0))
+        elif len(approx) == 5 and shape=="pentagon":
+            cv2.putText(img, "pentagon", (x, y), font, 1, (0))
+        elif len(approx) >10 and shape=="circle":
+            cv2.putText(img, "circle", (x, y), font, 1, (0))
+    cv2.waitKey(5)
+    cv2.imshow("shapes",img)
+    cv2.imshow("threshold",smooth)
+cv2.destroyAllWindows()
+cap.release()
+
