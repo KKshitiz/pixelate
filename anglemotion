@@ -1,0 +1,113 @@
+import cv2
+import numpy as np
+import math
+import serial
+bluetooth =serial.Serial("COM5",9600)
+
+
+cap=cv2.VideoCapture(1)
+#img=cv2.imread('C:\Users\SARANSH TAYAL\Desktop\s (7).jpeg')
+
+cx=0
+cy=0
+cx3=0
+cy3=0
+while 1:
+
+    ret,img=cap.read()
+    if not ret:
+        continue
+    #centre of bot
+    frame=np.copy(img)
+    frame1=np.copy(img)
+    blur=cv2.medianBlur(frame,5)
+    hsv=cv2.cvtColor(blur,cv2.COLOR_BGR2HSV)
+    #yellow
+    hsv1=cv2.inRange(hsv,np.array([0,100,158]),np.array([255,255,255]))
+    #blue
+    hsv2=cv2.inRange(hsv,np.array([50,67,58]),np.array([255,255,255]))
+    #kernel=np.ones((5,5),np.uint8)
+    #hsv2=cv2.erode(hsv1,kernel,iterations=1)
+    #hsv3=cv2.dilate(hsv2,kernel,iterations=1)
+    max=0
+    max3=0
+    best_cnt=0
+    best_cnt3=0
+    _,contours,_=cv2.findContours(hsv1,cv2.RETR_TREE,cv2.CHAIN_APPROX_NONE)
+    for cnt in contours:
+        area=cv2.contourArea((cnt))
+        if area>max:
+            best_cnt=cnt
+    M=cv2.moments(best_cnt)
+    _, contours3, _ = cv2.findContours(hsv2, cv2.RETR_TREE, cv2.CHAIN_APPROX_NONE)
+    for cnt3 in contours3:
+        area3=cv2.contourArea((cnt3))
+        if area3>max3:
+            best_cnt3=cnt3
+
+    cnt3 = contours3[0]
+
+    M3= cv2.moments(best_cnt3)
+
+    if M['m00']!=0:
+        cx=int(M['m10']/M['m00'])
+        cy=int(M['m01']/M['m00'])
+        #for cnt1 in contours:
+        cv2.drawContours(img,contours,0,(0,255,0),5)
+        cv2.putText(img, "centre", (cx, cy), cv2.FONT_HERSHEY_SIMPLEX, 2, (0, 0, 255), 6, cv2.LINE_AA)
+        cv2.rectangle(img,(cx,cy),(cx+2,cy+2),(0,0,255),-1)
+        cv2.imshow('hsv1',hsv1)
+
+
+    if M3['m00']!=0:
+        cx3=int(M3['m10']/M3['m00'])
+        cy3=int(M3['m01']/M3['m00'])
+        #for cnt1 in contours:
+        cv2.drawContours(img,contours3,0,(0,255,255),5)
+        cv2.putText(img, "centre", (cx3, cy3), cv2.FONT_HERSHEY_SIMPLEX, 2, (0, 0, 255), 6, cv2.LINE_AA)
+        cv2.circle(img,(cx3,cy3),4,(0,0,255),-1)
+        cv2.imshow('hsv2',hsv2)
+
+    midx=(cx+cx3)/2.0
+    midy = (cy + cy3) / 2.0
+
+
+    cv2.line(img, (cx3, cy3), (cx, cy), (23, 67, 158), 3)
+    cv2.line(img, (int(midx),int(midy)), (int(img.shape[1]/2),int(img.shape[0])), (23, 67, 158), 3)
+    if cy3-cy==0:
+        continue
+    if ((img.shape[0]-midy)/1.0)==0:
+        continue
+    t1 = ((cx3-cx)/1.0) / ((cy3-cy)/1.0)
+    t2=((midx-img.shape[1]/2)/1.0)/((img.shape[0]-midy)/1.0)
+    if (1+(t1*t2))==0:
+        continue
+    t=(t2-t1)/(1+(t1*t2))
+    angle = math.degrees(math.atan(t))
+    if angle>15:
+        print("left")
+        print(angle)
+        cv2.putText(img, "left", (0, img.shape[0]), cv2.FONT_HERSHEY_SIMPLEX, 2, (255, 255, 0), 6, cv2.LINE_AA)
+        bluetooth.write("l".encode())
+    if angle<-15:
+        print("right")
+        print(-angle)
+        cv2.putText(img, "right", (0, img.shape[0]), cv2.FONT_HERSHEY_SIMPLEX, 2, (255, 255, 0), 6, cv2.LINE_AA)
+        bluetooth.write("r".encode())
+    if angle<15 and angle>-15:
+        print("forward")
+        print(angle)
+        cv2.putText(img,"forward", (0, img.shape[0]), cv2.FONT_HERSHEY_SIMPLEX, 2, (255, 255, 0), 6, cv2.LINE_AA)
+        bluetooth.write("f".encode())
+
+
+
+
+    cv2.imshow('shape',img)
+    cv2.waitKey(5)
+
+cap.release()
+cv2.destroyAllWindows()
+
+
+
