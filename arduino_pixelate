@@ -1,0 +1,68 @@
+  int lmf=6;
+  int lmb=5;
+  int rmf=9;
+  int rmb=10;
+
+char data;
+  
+void setup() {
+  // put your setup code here, to run once:
+  Serial.begin(9600);
+  pinMode(lmf,OUTPUT);
+  pinMode(lmb,OUTPUT);
+  pinMode(rmf,OUTPUT);
+  pinMode(rmb,OUTPUT);
+
+}
+
+void loop() {
+  // put your main code here, to run repeatedly:
+if(Serial.available()>0)
+{
+  data=Serial.read();
+  Serial.println(data);
+  if(data=='r')
+  {
+    right();
+    delay(100);
+    forward();
+  }
+  
+  else if(data=='l')
+  {
+    left();
+    delay(100);
+    forward();
+  }
+  else if(data=='f')
+  forward();
+}
+
+
+}
+void right()
+{
+
+  analogWrite(lmf,80);
+  analogWrite(lmb,0);
+  analogWrite(rmf,30);
+  analogWrite(rmb,0);
+  
+}
+void left()
+{
+
+  analogWrite(lmb,0);
+  analogWrite(rmb,0);
+  analogWrite(lmf,30);
+  analogWrite(rmf,80);
+}
+void forward()
+{
+
+  analogWrite(lmb,0);
+  analogWrite(rmb,0);
+  analogWrite(lmf,60);
+  analogWrite(rmf,60);
+}
+
